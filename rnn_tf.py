@@ -10,7 +10,7 @@ from google.apputils import app
 import numpy as np
 import tensorflow as tf
 
-gflags.DEFINE_string("prefix", "The ",
+gflags.DEFINE_string("test_prefix", "The ",
                      "Prefix to prompt the network in test mode")
 gflags.DEFINE_string("training_data", "data/shakespeare.txt",
                      "Input data for training the neural network")
@@ -216,7 +216,7 @@ def main(args):
     saver = tf.train.Saver(tf.global_variables())
 
     # 1) TRAIN THE NETWORK
-    if FLAGS.checkpoint_file:
+    if not FLAGS.checkpoint_file:
         last_time = time.time()
 
         batch = np.zeros((batch_size, time_steps, in_size))
