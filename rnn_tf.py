@@ -19,6 +19,10 @@ gflags.DEFINE_string("checkpoint_file", None,
 
 gflags.DEFINE_integer("num_train_batches", 20000,
                       "Number of training batches")
+gflags.DEFINE_integer(
+    "test_output_length", 500,
+    "Number of test characters of text to generate after training the network"
+)
 FLAGS = gflags.FLAGS
 
 
@@ -176,13 +180,9 @@ def decode_embed(array, vocab):
 
 
 def main(args):
-    TEST_PREFIX = FLAGS.test_prefix.lower()
-
     # Load the data
-    data_ = ""
     with open(FLAGS.training_data, 'r') as f:
-        data_ += f.read()
-    data_ = data_.lower()
+        data_ = f.read().lower()
 
     # Convert to 1-hot coding
     vocab = list(set(data_))
@@ -194,9 +194,6 @@ def main(args):
     num_layers = 2
     batch_size = 64   # 128
     time_steps = 100  # 50
-
-    # Number of test characters of text to generate after training the network
-    LEN_TEST_TEXT = 500
 
     # Initialize the network
     config = tf.ConfigProto()
@@ -246,25 +243,25 @@ def main(args):
 
         saver.save(sess, "saved/model.ckpt")
 
-    # 2) GENERATE LEN_TEST_TEXT CHARACTERS USING THE TRAINED NETWORK
+    # 2) GENERATE FLAGS.test_output_length CHARACTERS USING THE TRAINED NETWORK
 
     if FLAGS.checkpoint_file:
         saver.restore(sess, FLAGS.checkpoint_file)
 
-    for i in range(len(TEST_PREFIX)):
-        out = net.run_step(embed_to_vocab(TEST_PREFIX[i], vocab),
+    for i in range(len(FLAGS.test_prefix)):
+        out = net.run_step(embed_to_vocab(FLAGS.test_prefix[i], vocab),
                            i == 0)
 
     log.info("SENTENCE:")
-    gen_str = TEST_PREFIX
-    for i in range(LEN_TEST_TEXT):
+    gen_str = FLAGS.test_prefix
+    for i in range(FLAGS.test_output_length):
         # Sample character from the network according to the generated
         #  output probabilities
         element = np.random.choice(list(range(len(vocab))), p=out)
         gen_str += vocab[element]
 
         out = net.run_step(embed_to_vocab(vocab[element], vocab), False)
-    log.info(gen_str)
+    print(gen_str)
 
 
 if __name__ == '__main__':
