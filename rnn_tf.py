@@ -17,6 +17,8 @@ gflags.DEFINE_string("training_data", "data/shakespeare.txt",
 gflags.DEFINE_string("checkpoint_file", None,
                      "Checkpoint file to load (optional)")
 
+gflags.DEFINE_integer("num_train_batches", 20000,
+                      "Number of training batches")
 FLAGS = gflags.FLAGS
 
 
@@ -178,7 +180,7 @@ def main(args):
 
     # Load the data
     data_ = ""
-    with open('data/shakespeare.txt', 'r') as f:
+    with open(FLAGS.training_data, 'r') as f:
         data_ += f.read()
     data_ = data_.lower()
 
@@ -192,8 +194,6 @@ def main(args):
     num_layers = 2
     batch_size = 64   # 128
     time_steps = 100  # 50
-
-    NUM_TRAIN_BATCHES = 20000
 
     # Number of test characters of text to generate after training the network
     LEN_TEST_TEXT = 500
@@ -223,7 +223,7 @@ def main(args):
         batch_y = np.zeros((batch_size, time_steps, in_size))
 
         possible_batch_ids = list(range(data.shape[0]-time_steps-1))
-        for i in range(NUM_TRAIN_BATCHES):
+        for i in range(FLAGS.num_train_batches):
             # Sample time_steps consecutive samples from the dataset text file
             batch_id = random.sample(possible_batch_ids, batch_size)
 
