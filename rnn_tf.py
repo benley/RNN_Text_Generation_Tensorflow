@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Text generation using a Recurrent Neural Network (LSTM)."""
 
 import random
