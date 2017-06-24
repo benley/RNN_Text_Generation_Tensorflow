@@ -19,17 +19,20 @@ gflags.DEFINE_string("checkpoint_file", None,
 FLAGS = gflags.FLAGS
 
 
-# RNN with num_layers LSTM layers and a fully-connected output layer
-# The network allows for a dynamic number of iterations, depending on the inputs it receives.
-#
-#    out   (fc layer; out_size)
-#     ^
-#    lstm
-#     ^
-#    lstm  (lstm size)
-#     ^
-#     in   (in_size)
 class ModelNetwork(object):
+    """RNN with num_layers LSTM layers and a fully-connected output layer
+
+    The network allows for a dynamic number of iterations, depending on the
+    inputs it receives.
+
+       out   (fc layer; out_size)
+        ^
+       lstm
+        ^
+       lstm  (lstm size)
+        ^
+        in   (in_size)
+    """
     def __init__(self, in_size, lstm_size, num_layers, out_size, session,
                  learning_rate=0.003, name="rnn"):
         self.scope = name
@@ -73,24 +76,42 @@ class ModelNetwork(object):
                 dtype=tf.float32)
 
             # Linear activation (FC layer on top of the LSTM net)
-            self.rnn_out_W = tf.Variable(tf.random_normal( (self.lstm_size, self.out_size), stddev=0.01 ))
-            self.rnn_out_B = tf.Variable(tf.random_normal( (self.out_size, ), stddev=0.01 ))
+            self.rnn_out_W = tf.Variable(
+                tf.random_normal(
+                    (self.lstm_size, self.out_size),
+                    stddev=0.01
+                ))
+            self.rnn_out_B = tf.Variable(
+                tf.random_normal(
+                    (self.out_size, ),
+                    stddev=0.01
+                ))
 
-            outputs_reshaped = tf.reshape( outputs, [-1, self.lstm_size] )
-            network_output = ( tf.matmul( outputs_reshaped, self.rnn_out_W ) + self.rnn_out_B )
+            outputs_reshaped = tf.reshape(outputs, [-1, self.lstm_size])
+            network_output = (tf.matmul(outputs_reshaped, self.rnn_out_W)
+                              + self.rnn_out_B)
 
             batch_time_shape = tf.shape(outputs)
-            self.final_outputs = tf.reshape( tf.nn.softmax( network_output), (batch_time_shape[0], batch_time_shape[1], self.out_size) )
+            self.final_outputs = tf.reshape(
+                tf.nn.softmax(network_output),
+                (batch_time_shape[0], batch_time_shape[1], self.out_size)
+            )
 
             # Training: provide target outputs for supervised training.
-            self.y_batch = tf.placeholder(tf.float32, (None, None, self.out_size))
+            self.y_batch = tf.placeholder(tf.float32,
+                                          (None, None, self.out_size))
             y_batch_long = tf.reshape(self.y_batch, [-1, self.out_size])
 
-            self.cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(logits=network_output, labels=y_batch_long) )
-            self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, 0.9).minimize(self.cost)
+            self.cost = tf.reduce_mean(
+                tf.nn.softmax_cross_entropy_with_logits(
+                    logits=network_output,
+                    labels=y_batch_long)
+            )
+            self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, 0.9
+                                                      ).minimize(self.cost)
 
-    # Input: X is a single element, not a list!
     def run_step(self, x, init_zero_state=True):
+        """Input: X is a single element, not a list!"""
         # Reset the initial state of the network.
         if init_zero_state:
             init_value = np.zeros((self.num_layers*2*self.lstm_size,))
@@ -109,9 +130,11 @@ class ModelNetwork(object):
 
         return out[0][0]
 
-    # xbatch must be (batch_size, timesteps, input_size)
-    # ybatch must be (batch_size, timesteps, output_size)
     def train_batch(self, xbatch, ybatch):
+        """
+        xbatch must be (batch_size, timesteps, input_size)
+        ybatch must be (batch_size, timesteps, output_size)
+        """
         init_value = np.zeros((xbatch.shape[0],
                                self.num_layers*2*self.lstm_size))
 
@@ -127,9 +150,12 @@ class ModelNetwork(object):
         return cost
 
 
-# Embed string to character-arrays -- it generates an array len(data) x len(vocab)
-# Vocab is a list of elements
 def embed_to_vocab(data_, vocab):
+    """Embed string to character-arrays
+
+    It generates an array len(data) x len(vocab)
+    Vocab is a list of elements
+    """
     data = np.zeros((len(data_), len(vocab)))
 
     cnt = 0
