@@ -1,0 +1,5 @@
+glog
+google-apputils
+numpy
+python-gflags
+tensorflow
