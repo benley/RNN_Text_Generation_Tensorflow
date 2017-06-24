@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Text generation using a Recurrent Neural Network (LSTM)."""
 
+import os
 import random
 import time
 
@@ -14,15 +15,19 @@ gflags.DEFINE_string("test_prefix", "The ",
                      "Prefix to prompt the network in test mode")
 gflags.DEFINE_string("training_data", "data/shakespeare.txt",
                      "Input data for training the neural network")
-gflags.DEFINE_string("checkpoint_file", None,
-                     "Checkpoint file to load (optional)")
+gflags.DEFINE_string("checkpoint_file", "saved/model.ckpt",
+                     "Checkpoint file to load")
 
 gflags.DEFINE_integer("num_train_batches", 20000,
                       "Number of training batches")
 gflags.DEFINE_integer(
     "test_output_length", 500,
-    "Number of test characters of text to generate after training the network"
-)
+    "Number of test characters of text to generate after training the network")
+gflags.DEFINE_boolean(
+    "continue_training", False,
+    "If true, do more training after loading a checkpoint")
+
+
 FLAGS = gflags.FLAGS
 
 
@@ -180,6 +185,8 @@ def decode_embed(array, vocab):
 
 
 def main(args):
+    TEST_PREFIX = FLAGS.test_prefix.lower()
+
     # Load the data
     with open(FLAGS.training_data, 'r') as f:
         data_ = f.read().lower()
@@ -212,8 +219,15 @@ def main(args):
 
     saver = tf.train.Saver(tf.global_variables())
 
+    # Restore the checkpoint, if any
+    if os.path.exists(FLAGS.checkpoint_file):
+        saver.restore(sess, FLAGS.checkpoint_file)
+        restored = True
+    else:
+        restored = False
+
     # 1) TRAIN THE NETWORK
-    if not FLAGS.checkpoint_file:
+    if FLAGS.continue_training or not restored:
         last_time = time.time()
 
         batch = np.zeros((batch_size, time_steps, in_size))
@@ -241,19 +255,16 @@ def main(args):
                 log.info("batch: %s loss: %s speed: %s batches / s",
                          i, cst, (100.0/diff))
 
-        saver.save(sess, "saved/model.ckpt")
+            log.info("Saving checkpoint to %s", FLAGS.checkpoint_file)
+            saver.save(sess, FLAGS.checkpoint_file)
 
-    # 2) GENERATE FLAGS.test_output_length CHARACTERS USING THE TRAINED NETWORK
-
-    if FLAGS.checkpoint_file:
-        saver.restore(sess, FLAGS.checkpoint_file)
-
-    for i in range(len(FLAGS.test_prefix)):
-        out = net.run_step(embed_to_vocab(FLAGS.test_prefix[i], vocab),
+    # GENERATE FLAGS.test_output_length CHARACTERS USING THE TRAINED NETWORK
+    for i in range(len(TEST_PREFIX)):
+        out = net.run_step(embed_to_vocab(TEST_PREFIX[i], vocab),
                            i == 0)
 
     log.info("SENTENCE:")
-    gen_str = FLAGS.test_prefix
+    gen_str = TEST_PREFIX
     for i in range(FLAGS.test_output_length):
         # Sample character from the network according to the generated
         #  output probabilities
