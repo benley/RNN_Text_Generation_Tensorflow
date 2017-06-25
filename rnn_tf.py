@@ -4,9 +4,9 @@
 import random
 import time
 
+from google.apputils import app
 import gflags
 import glog as log
-from google.apputils import app
 import numpy as np
 import tensorflow as tf
 
@@ -14,8 +14,8 @@ gflags.DEFINE_string("test_prefix", "The ",
                      "Prefix to prompt the network in test mode")
 gflags.DEFINE_string("training_data", "data/shakespeare.txt",
                      "Input data for training the neural network")
-gflags.DEFINE_string("init", False,
-                     "Create a new model, don't load an existing checkpoint.")
+gflags.DEFINE_boolean("init", False,
+                      "Create a new model, don't load an existing checkpoint.")
 gflags.DEFINE_string("checkpoint_file", "saved/model.ckpt",
                      "Checkpoint file to load")
 gflags.DEFINE_integer("num_train_batches", 20000,
