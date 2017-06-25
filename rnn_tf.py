@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Text generation using a Recurrent Neural Network (LSTM)."""
 
-import os
 import random
 import time
 
@@ -15,9 +14,10 @@ gflags.DEFINE_string("test_prefix", "The ",
                      "Prefix to prompt the network in test mode")
 gflags.DEFINE_string("training_data", "data/shakespeare.txt",
                      "Input data for training the neural network")
+gflags.DEFINE_string("init", False,
+                     "Create a new model, don't load an existing checkpoint.")
 gflags.DEFINE_string("checkpoint_file", "saved/model.ckpt",
                      "Checkpoint file to load")
-
 gflags.DEFINE_integer("num_train_batches", 20000,
                       "Number of training batches")
 gflags.DEFINE_integer(
@@ -219,16 +219,12 @@ def main(args):
 
     saver = tf.train.Saver(tf.global_variables())
 
-    # Restore the checkpoint, if any
-    try:
+    if not FLAGS.init:
+        # Restore the checkpoint, if any
         saver.restore(sess, FLAGS.checkpoint_file)
-        restored = True
-    except Exception as err:
-        log.error("Couldn't restore checkpoint: %s", err)
-        restored = False
 
     # 1) TRAIN THE NETWORK
-    if FLAGS.continue_training or not restored:
+    if FLAGS.continue_training or FLAGS.init:
         last_time = time.time()
 
         batch = np.zeros((batch_size, time_steps, in_size))
