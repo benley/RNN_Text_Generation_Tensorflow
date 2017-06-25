@@ -220,10 +220,11 @@ def main(args):
     saver = tf.train.Saver(tf.global_variables())
 
     # Restore the checkpoint, if any
-    if os.path.exists(FLAGS.checkpoint_file):
+    try:
         saver.restore(sess, FLAGS.checkpoint_file)
         restored = True
-    else:
+    except Exception as err:
+        log.error("Couldn't restore checkpoint: %s", err)
         restored = False
 
     # 1) TRAIN THE NETWORK
@@ -255,6 +256,7 @@ def main(args):
                 log.info("batch: %s loss: %s speed: %s batches / s",
                          i, cst, 100.0 / diff)
 
+            if i % 1000 == 0:
                 log.info("Saving checkpoint to %s", FLAGS.checkpoint_file)
                 saver.save(sess, FLAGS.checkpoint_file)
 
