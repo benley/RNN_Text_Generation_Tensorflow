@@ -233,7 +233,7 @@ def main(args):
         batch = np.zeros((batch_size, time_steps, in_size))
         batch_y = np.zeros((batch_size, time_steps, in_size))
 
-        possible_batch_ids = list(range(data.shape[0]-time_steps-1))
+        possible_batch_ids = list(range(data.shape[0] - time_steps - 1))
         for i in range(FLAGS.num_train_batches):
             # Sample time_steps consecutive samples from the dataset text file
             batch_id = random.sample(possible_batch_ids, batch_size)
@@ -247,23 +247,26 @@ def main(args):
 
             cst = net.train_batch(batch, batch_y)
 
-            if (i % 100) == 0:
+            if i % 100 == 0:
                 new_time = time.time()
                 diff = new_time - last_time
                 last_time = new_time
 
                 log.info("batch: %s loss: %s speed: %s batches / s",
-                         i, cst, (100.0/diff))
+                         i, cst, 100.0 / diff)
 
-            log.info("Saving checkpoint to %s", FLAGS.checkpoint_file)
-            saver.save(sess, FLAGS.checkpoint_file)
+            if i % 10 == 0:
+                log.info("Saving checkpoint to %s", FLAGS.checkpoint_file)
+                saver.save(sess, FLAGS.checkpoint_file)
+
+        saver.save(sess, FLAGS.checkpoint_file)
 
     # GENERATE FLAGS.test_output_length CHARACTERS USING THE TRAINED NETWORK
     for i in range(len(TEST_PREFIX)):
         out = net.run_step(embed_to_vocab(TEST_PREFIX[i], vocab),
                            i == 0)
 
-    log.info("SENTENCE:")
+    log.info("Generating test output")
     gen_str = TEST_PREFIX
     for i in range(FLAGS.test_output_length):
         # Sample character from the network according to the generated
