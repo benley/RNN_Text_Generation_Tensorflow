@@ -255,7 +255,6 @@ def main(args):
                 log.info("batch: %s loss: %s speed: %s batches / s",
                          i, cst, 100.0 / diff)
 
-            if i % 10 == 0:
                 log.info("Saving checkpoint to %s", FLAGS.checkpoint_file)
                 saver.save(sess, FLAGS.checkpoint_file)
 
